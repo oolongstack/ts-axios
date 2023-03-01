@@ -36,6 +36,7 @@
     "dist"
   ],
   "scripts": {
+    "example": "node example/index.js",
     "build": "unbuild",
     "dev": "unbuild --stub",
     "release": "npm publish",
