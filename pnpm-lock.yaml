@@ -28,8 +28,11 @@ importers:
 
   playground:
     specifiers:
+      '@cwater/ts-lib': link:..
       typescript: ^4.9.3
       vite: ^4.1.0
+    dependencies:
+      '@cwater/ts-lib': link:..
     devDependencies:
       typescript: 4.9.5
       vite: 4.1.4
