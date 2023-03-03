@@ -1,5 +1,5 @@
 {
-  "name": "@cwater/ts-lib",
+  "name": "ts-axios",
   "type": "module",
   "version": "0.0.0",
   "packageManager": "pnpm@7.12.0",
