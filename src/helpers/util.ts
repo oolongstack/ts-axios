@@ -18,19 +18,38 @@ export function isPlainObject(val: any): val is Object {
  * @param from
  */
 export function extend<T, U>(to: T, from: U): T & U {
-  // console.log(from);
-
   const prototype: any = Object.getPrototypeOf(from);
   const keys = Object.getOwnPropertyNames(prototype)
     .filter((it) => it !== "constructor")
-    .concat("interceptors");
+    .concat("interceptors", "defaults");
   for (const key of keys) {
-    // console.log(key);
-    if (key === "interceptors") {
+    if (key === "interceptors" || key === "defaults") {
       (to as any)[key] = (from as any)[key];
     } else {
       (to as any)[key] = prototype[key] as any;
     }
   }
   return to as T & U;
+}
+
+export function deepMerge(...objs: any[]): any {
+  const result = Object.create(null);
+
+  objs.forEach((obj) => {
+    if (obj) {
+      Object.keys(obj).forEach((objKey) => {
+        const val = obj[objKey];
+        if (isPlainObject(val)) {
+          if (isPlainObject(result[objKey])) {
+            result[objKey] = deepMerge(result[objKey], val);
+          }
+          result[objKey] = deepMerge(val);
+        } else {
+          result[objKey] = val;
+        }
+      });
+    }
+  });
+
+  return result;
 }

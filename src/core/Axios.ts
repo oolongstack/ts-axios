@@ -3,17 +3,26 @@ import {
   AxiosRequestConfig,
   AxiosResponse,
   Method,
+  RejectedFn,
+  ResolvedFn,
 } from "../types";
 import dispatchRequest from "./dispatchRequest";
 import { InterceptorManager } from "./interceptorManager";
+import mergeConfig from "./mergeConfig";
 export interface Interceptors {
   request: InterceptorManager<AxiosRequestConfig>;
   response: InterceptorManager<AxiosResponse>;
 }
+interface PromiseChain<T> {
+  resolved: ResolvedFn<T> | ((config: AxiosRequestConfig) => AxiosPromise);
+  rejected: RejectedFn | undefined;
+}
 
 class Axios {
+  public defaults: AxiosRequestConfig;
   public interceptors: Interceptors;
-  constructor() {
+  constructor(initConfig: AxiosRequestConfig) {
+    this.defaults = initConfig;
     this.interceptors = {
       request: new InterceptorManager<AxiosRequestConfig>(),
       response: new InterceptorManager<AxiosResponse>(),
@@ -31,9 +40,37 @@ class Axios {
       config = url;
     }
 
+    config = mergeConfig(this.defaults, config);
     // 拦截器相关逻辑
-    const chain = [];
-    return dispatchRequest(config);
+    const chain: PromiseChain<any>[] = [
+      { resolved: dispatchRequest, rejected: undefined },
+    ];
+    if (this.interceptors.request) {
+      this.interceptors.request.forEach((interceptor) => {
+        chain.unshift({
+          resolved: interceptor.resolved,
+          rejected: interceptor.rejected,
+        });
+      });
+    }
+    if (this.interceptors.response) {
+      this.interceptors.response.forEach((interceptor) => {
+        chain.push({
+          resolved: interceptor.resolved,
+          rejected: interceptor.rejected,
+        });
+      });
+    }
+    let promise = Promise.resolve(config);
+
+    while (chain.length) {
+      const interceptor = chain.shift()!;
+      promise = promise.then(interceptor.resolved, interceptor.rejected);
+    }
+
+    // console.log(chain, "this.chain");
+
+    return promise;
   }
   public get(url: string, config?: AxiosRequestConfig): AxiosPromise {
     return this._requestMethodWhitoutData(url, "GET", config);

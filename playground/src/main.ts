@@ -1,4 +1,8 @@
 import axios from "ts-axios";
+
+console.log(axios.defaults);
+
+axios.defaults.headers.common["Authorization"] = "ioioioioioioi";
 // axios({
 //   url: "/api/users",
 //   method: "get",
@@ -99,7 +103,15 @@ const res = await axios.get<{ username: string; password: string }[]>(
   }
 );
 
-const loginRes = await axios.post("/api/auth/login", {
-  username: "cjl",
-  password: "123456",
-});
+const loginRes = await axios.post(
+  "/api/auth/login",
+  {
+    username: "cjl",
+    password: "123456",
+  },
+  {
+    headers: {
+      test: "111",
+    },
+  }
+);
